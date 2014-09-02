@@ -39,4 +39,12 @@ for j in range(nKey):
 freq = [32.7*2**((i+1)/12.0) for i in range(82)] 
 
 plt.plot(freq,F[0][int(len(F[0])/2):])
+file_object = open("train.dat","w+")
+for i in range(nKey):
+    for j in range(len(F[i])):
+        if F[i][j]!=0:
+            file_object.write(str(j+1)+":"+str(F[i][j])+" ")
+    file_object.write("\n")
+file_object.close()
+
 plt.show()

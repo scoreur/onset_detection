@@ -36,6 +36,8 @@ class CQT :
         return (np.fft.fft(x, self.fftlen).reshape(1, self.fftlen) * self.ker)[0]
 
     def fast(self, x) :
+        for i in range(3) :
+            x = x + x
         x = np.array(x)
         print x.shape
         cq = []
