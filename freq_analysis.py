@@ -14,7 +14,7 @@ drd = CQT(fmin,fmax,bins,framerate,hamming)
 F = [0]*nKey
 for j in range(nKey):
     i = seq_onset[j]
-    if (i>=2):
+    """if (i>=2):
         print i,(i+1.0)/framerate*h
         x1 = drd.fast(signal[int((i-2)*h):int(i*h)])
         y1 = []
@@ -22,7 +22,7 @@ for j in range(nKey):
             y1 += [sum(x1[k*b_hop-rad:k*b_hop+rad+1])/b_hop]
         y1 = max_normalize(y1)
     else :
-        y1 = [0]*82
+        y1 = [0]*82"""
         
     if (i<=M-4):   
         print i,(i+1.0)/framerate*h
@@ -34,17 +34,21 @@ for j in range(nKey):
     else:
         y2 = [0]*82
         
-    F[j] = y1 + y2
+    F[j] = y2
 
 freq = [32.7*2**((i+1)/12.0) for i in range(82)] 
 
-plt.plot(freq,F[0][int(len(F[0])/2):])
-file_object = open("train.dat","w+")
+#plt.plot(freq,F[0][int(len(F[0])/2):],'r')
+
+plt.plot(freq,F[0],'r')
+
+plt.show()
+
+file_object = open("train.dat","w")
 for i in range(nKey):
+    file_object.write("%d " %13)
     for j in range(len(F[i])):
         if F[i][j]!=0:
             file_object.write(str(j+1)+":"+str(F[i][j])+" ")
     file_object.write("\n")
 file_object.close()
-
-plt.show()

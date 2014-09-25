@@ -6,8 +6,6 @@ from tool.normalizer import max_normalize
 from wav_in import wav_in
 
 
-
-
 def Hanning(k,N):
     w = 0.5*(1-math.cos(2*math.pi*k/(N-1)))
     return w
@@ -18,9 +16,10 @@ def pre_process(signal):
     while signal[i]<0.1 :
         signal[i] = 0
         i += 1
-    signal = signal[:200000]
+    signal = signal[:300000]
     return signal
 
+ 
 name = raw_input("input the .wav file\n")
 [signal,params] = wav_in(name)
 nchannels, sampwidth, framerate, nframes = params[:4]
@@ -78,15 +77,15 @@ for m in range(M):
     if (f_onset[m]>f_onset[m-1]) and (f_onset[m]>f_onset[m+1]) and ((f_onset[m]>threshhold1) or ((f_onset[m]>threshhold2) and (max(f[m-1:m+2])>threshhold3))):
         seq_onset += [m]
         
-print [(i+1.0)/framerate*h for i in seq_onset]
+#print [(i+1.0)/framerate*h for i in seq_onset]
 
 
-"""time = [(i+0.5)/framerate*h for i in range(M+1)]
+time = [(i+1.0)/framerate*h for i in range(M+1)]
 
 print "ploting"
 plt.plot(time,f_onset,'r')
 plt.plot(time,f,'b')
 plt.xlabel("time")
-plt.show()"""
+plt.show()
 
 
