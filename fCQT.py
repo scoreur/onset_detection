@@ -126,8 +126,8 @@ def fCQT(name,length=200000,compress=1):
 		
     return (F,time)	
 
-
-def onset_svm(signal,nframerate,length=200000,compress=1):
+# important part ============================
+def onset_svm(signal,nframerate,modelFile = 'libsvm\data\model.dat', length=200000,compress=1):
     """print "processing\n"+name
     [signal,params] = wav_in(name)
     nchannels, sampwidth, framerate, nframes = params[:4]"""
@@ -163,7 +163,8 @@ def onset_svm(signal,nframerate,length=200000,compress=1):
     for m in range(M):
         x = [i*j for i,j in zip(signal[m*h:m*h+N],wnd)]
         S[m] = FFT(x)
-        
+    
+    print "finish FFT"
     S = map(lambda str:map(abs,str),S[:M])
 
     print "calculating f and f_onset"
@@ -224,7 +225,8 @@ def onset_svm(signal,nframerate,length=200000,compress=1):
 		
     y = [0]*len(F)
 	
-    model = svm_load_model('libsvm\data\model.dat')
+    #modified by WYJ
+    model = svm_load_model(modelFile);
     p_labels, p_acc, p_vals = svm_predict(y,F,model)
 	
     str_labels=[0]*len(y)
