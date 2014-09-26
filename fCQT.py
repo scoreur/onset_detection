@@ -26,6 +26,7 @@ def pre_process(signal,length):
     return signal
 
 def transfer_pitch(num):
+    num = int(num)
     l = int((num+8) / 12)
     return note[(num+8) % 12]+str(l)
 	
@@ -91,8 +92,8 @@ def fCQT(name,length=200000,compress=1):
 	time = [(i+1.0)/framerate*h for i in seq_onset]		
     nKey = len(seq_onset)
 
-    fmin = 32.7
-    fmax = 3951
+    fmin = 32.7  #the 4th notes from the left
+    fmax = 3951  #the 2nd notes from the right
     b_hop = 7 # 31 bins per note, 31 can be replaced by any other odd number. trade-off between effiency and accuracy
     bins = b_hop * 12
     rad = int(b_hop/2)
@@ -127,13 +128,13 @@ def fCQT(name,length=200000,compress=1):
     return (F,time)	
 
 # important part ============================
-def onset_svm(signal,nframerate,modelFile = 'libsvm\data\model.dat', length=200000,compress=1):
-    """print "processing\n"+name
-    [signal,params] = wav_in(name)
-    nchannels, sampwidth, framerate, nframes = params[:4]"""
+def onset_svm(inputFile, modelFile, outputFile, length=200000,compress=1):
+    [signal,params] = wav_in(inputFile)
+    nchannels, sampwidth, nframerate, nframes = params[:4]
+    
     framerate = int(nframerate/compress)
     #print "orignal length:",len(signal)
-    signal = pre_process(signal,length)
+    signal = pre_process(signal,len(signal))
     #print "length now:",len(signal)
     #print params
 
@@ -142,7 +143,7 @@ def onset_svm(signal,nframerate,modelFile = 'libsvm\data\model.dat', length=2000
     #constant in onset_detection
     h = int(2**math.ceil(math.log(framerate*0.03)/math.log(2))) # hop size
     #print "h=",h
-    #print "time interval=",h/framerate,"s"
+    print "time interval=",h/framerate,"s"
     N = 2*h # size of the Hanning window
     threshhold1 = 0.5 #standard
     threshhold2 = 0.4 #the lowest requirement for f_onset
@@ -150,6 +151,7 @@ def onset_svm(signal,nframerate,modelFile = 'libsvm\data\model.dat', length=2000
 
 
     M = int(len(signal)/h) -1
+    print "size of M", M
     L = int(N/2)
     wnd = [Hanning(i,N) for i in range(N)]
 
@@ -158,26 +160,29 @@ def onset_svm(signal,nframerate,modelFile = 'libsvm\data\model.dat', length=2000
 
 
     print "calulating S..."  #  S stores the result of STFT of the signal
-    S = [[] for i in range(M)]
-
+    #S = [[] for i in range(M)]
+    f = [0]*(M+1)
     for m in range(M):
-        x = [i*j for i,j in zip(signal[m*h:m*h+N],wnd)]
-        S[m] = FFT(x)
+        print m
+        S = FFT([i*j for i,j in zip(signal[m*h:m*h+N],wnd)])[1:L]
+        S = map(abs, S[:])
+        f[m] = sum(S)
     
     print "finish FFT"
-    S = map(lambda str:map(abs,str),S[:M])
+#S = map(lambda str:map(abs,str),S[:M])
+    # power spectrum
 
     print "calculating f and f_onset"
 
-    f = [0]*(M+1)
-    for m in range(M):
-        f[m] = sum(S[m][1:int(len(S[m])/2)]) # f[m] is the sum of the magnitude spectrum
+
+    '''for m in range(M):
+        f[m] = sum(S[m][1:int(len(S[m])/2)]) '''# f[m] is the sum of the magnitude spectrum
     f = max_normalize(f);
 
     f_onset = [0]*(M+1)
     for m in range(1,M):
         if f[m] != 0.0:
-            f_onset[m] = (f[m]-f[m-1])/f[m] #detection funtion
+            f_onset[m] = 1-f[m-1]/f[m] #detection funtion
         else:
             f_onset[m] = 0
         
@@ -196,6 +201,7 @@ def onset_svm(signal,nframerate,modelFile = 'libsvm\data\model.dat', length=2000
     bins = b_hop * 12
     rad = int(b_hop/2)
     drd = CQT(fmin,fmax,bins,framerate,hamming)
+    
     F = [0]*nKey  
 	
     for j in range(0,nKey):
@@ -216,22 +222,38 @@ def onset_svm(signal,nframerate,modelFile = 'libsvm\data\model.dat', length=2000
             y2 = []
             for k in range(1,83):
                 y2 += [sum(x2[k*b_hop-rad:k*b_hop+rad+1])/b_hop]
-            y2 = max_normalize(y2)
+            F[j] = max_normalize(y2)
         else:
-            y2 = [0]*82
+            F[j] = [0]*82
 			
-        F[j] = y2  #only consider the part after the onset
+         #only consider the part after the onset
 		
 		
     y = [0]*len(F)
+    
+    fout = open(outputFile, 'w')
+    for i in range(len(F)):
+        for j in range(len(F[i])):
+            fout.write(str(F[i][j])+' ')
+        fout.write('\n')
+    
+    fout.close()
+    print "finished"
+
 	
     #modified by WYJ
     model = svm_load_model(modelFile);
     p_labels, p_acc, p_vals = svm_predict(y,F,model)
 	
-    str_labels=[0]*len(y)
+    #str_labels=[0]*len(y)
+    str_labels = map(transfer_pitch, p_labels[:len(y)]);
+    for i in range(len(time)):
+        print str_labels[i],time[i]
+
+    '''
     for i in range(len(y)):
        p_labels[i] = int(p_labels[i])
-       str_labels[i] = transfer_pitch(int(p_labels[i]))
+       str_labels[i] = transfer_pitch(int(p_labels[i]))'''
+
 
     return p_labels,str_labels,time

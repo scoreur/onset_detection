@@ -27,7 +27,8 @@ def FFT_fund(x,logDeg):
 	else:
 		y_even = FFT_fund(x[0::2],logDeg-1)*2
 		y_odd = FFT_fund(x[1::2],logDeg-1)*2
-		return [y_even[i]+uRoot(i,2**logDeg)*y_odd[i] for i in range(0,2**logDeg)]	
+		return [y_even[i]+uRoot(i,2**logDeg)*y_odd[i] for i in range(0,2**logDeg)]
+
 
 #FFT without POT length constrain
 def FFT(*args):

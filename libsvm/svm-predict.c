@@ -80,7 +80,7 @@ void predict(FILE *input, FILE *output)
 		char *idx, *val, *label, *endptr;
 		int inst_max_index = -1; // strtol gives 0 if wrong format, and precomputed kernel has <index> start from 0
 
-		label = strtok(line," \t\n");
+		label = strtok(line," \t\n");//FETCH first
 		if(label == NULL) // empty line
 			exit_input_error(total+1);
 
@@ -96,7 +96,7 @@ void predict(FILE *input, FILE *output)
 				x = (struct svm_node *) realloc(x,max_nr_attr*sizeof(struct svm_node));
 			}
 
-			idx = strtok(NULL,":");
+			idx = strtok(NULL,":");//NULL means the same str as last FETCH
 			val = strtok(NULL," \t");
 
 			if(val == NULL)
